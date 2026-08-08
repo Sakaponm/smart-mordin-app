@@ -22,10 +22,10 @@ with col2:
         "ระยะการเจริญเติบโตปัจจุบัน",
         options=["stage_1", "stage_2", "stage_3", "stage_4"],
         format_func=lambda x: {
-            "stage_1": "ระยะที่ 1: ฟื้นฟูต้น / ทำใบอ่อน",
-            "stage_2": "ระยะที่ 2: สะสมอาหารทำดอก",
-            "stage_3": "ระยะที่ 3: ขยายขนาดผล (30-70 วัน)",
-            "stage_4": "ระยะที่ 4: ทำหวานก่อนเก็บเกี่ยว"
+            "stage_1": "ระยะที่ 1: ฟื้นฟูต้น / ทำใบอ่อน (หลังเก็บเกี่ยว)",
+            "stage_2": "ระยะที่ 2: สะสมอาหารทำดอก (ก่อนบาน 1-2 เดือน)",
+            "stage_3": "ระยะที่ 3: ขยายขนาดผล (ติดผล 30-70 วัน)",
+            "stage_4": "ระยะที่ 4: ทำหวานก่อนเก็บเกี่ยว (20-30 วัน)"
         }[x]
     )
     use_bio = st.checkbox("ใช้ชุดฟื้นฟูดินกู้ชีพ BioMax + BioSoil (ลดปุ๋ยเคมี 50%)", value=True)
@@ -46,7 +46,6 @@ st.divider()
 
 # --- ปุ่มประมวลผล ---
 if st.button("🧮 คำนวณสูตรปุ๋ยอัจฉริยะ", type="primary", use_container_width=True):
-    # เรียกใช้ฟังก์ชันคำนวณ
     res = calculate_durian_fertilizer_api(
         canopy_diameter_m=canopy,
         tree_count=tree_count,
@@ -58,27 +57,47 @@ if st.button("🧮 คำนวณสูตรปุ๋ยอัจฉริย�
         use_bio_duo=use_bio
     )
 
-    st.subheader(f"📊 ผลคำนวณสำหรับ: {res['stage_name']}")
+    st.subheader(f"📊 ผลคำนวณเฉพาะรอบปัจจุบัน: {res['stage_name']}")
     
     # แจ้งเตือนสุขภาพดิน
     if res["soil_diagnostics"]["soil_ph"] < 5.0:
         st.warning(res["soil_diagnostics"]["alert_message"])
 
-    # แสดงผลปุ๋ยต่อ 1 ต้น
-    st.markdown("### 🥣 ปริมาณปุ๋ยสั่งตัดผสมต่อ 1 ต้น")
+    # แสดงผลปุ๋ยต่อ 1 ต้น (รอบปัจจุบัน)
+    st.markdown("### 🥣 ปริมาณปุ๋ยสั่งตัดตักใส่ต่อ 1 ต้น (ใส่รอบนี้)")
     c1, c2, c3 = st.columns(3)
     c1.metric("ปุ๋ยยูเรีย (46-0-0)", f"{res['per_tree_chemical_g']['urea_46_0_0']} กรัม")
     c2.metric("ปุ๋ยแดป (18-46-0)", f"{res['per_tree_chemical_g']['dap_18_46_0']} กรัม")
     c3.metric("ปุ๋ยป๊อป (0-0-60)", f"{res['per_tree_chemical_g']['mop_0_0_60']} กรัม")
 
-    # แสดงผลชุดชีวภาพ BioMax / BioSoil
+    # แสดงคำแนะนำการใส่ BioMax / BioSoil
     if use_bio:
-        st.markdown("### 🟤 🟢 ชุดฟื้นฟูดินชีวภาพ (Bio-Duo Set)")
-        st.info(f"**BioSoil (ไบโอซอย):** โรยโคนต้นละ **{res['bio_products']['bio_soil']['kg_per_tree']} กิโลกรัม** (รวมทั้งสวนใช้ {res['bio_products']['bio_soil']['total_kg']} กิโลกรัม / ประมาณ {res['bio_products']['bio_soil']['bags_50kg']} ถุง)")
-        st.success(f"**BioMax (ไบโอแม็ก):** ผสมน้ำรวม **{res['bio_products']['bio_max']['total_water_liters']} ลิตร** ใช้ BioMax **{res['bio_products']['bio_max']['biomax_liters_required']} ลิตร** (ราดโคนหรือปล่อยผ่านระบบน้ำ)")
+        biosoil_per_round = round(0.25 * canopy, 1)
+        total_biosoil_kg = biosoil_per_round * tree_count
+        water_liters = 20 * tree_count
+        biomax_liters = water_liters / 1000.0
 
-    # สรุปการสั่งซื้อรวมทั้งสวน
-    st.markdown("### 📦 สรุปยอดรวมแม่ปุ๋ยเคมีที่ต้องใช้ทั้งสวน")
+        st.markdown("### 🟤 🟢 ปริมาณชุดชีวภาพ ( Bio-Duo Set ) ที่ต้องใส่รอบนี้")
+        st.info(f"**BioSoil (ไบโอซอย):** โรยโคนต้นละ **{biosoil_per_round} กิโลกรัม** (รวมใช้ทั้งสวนรอบนี้ {total_biosoil_kg} กก. / ประมาณ {round(total_biosoil_kg/50, 1)} ถุง)")
+        st.success(f"**BioMax (ไบโอแม็ก):** ผสมน้ำ **{water_liters} ลิตร** ใช้ BioMax **{biomax_liters} ลิตร**[cite: 1] (ราดโคนหรือใส่ระบบน้ำ)")
+
+        # --- ตารางแนะนำตารางการใส่ปุ๋ยตลอดทั้งปี (3 รอบหลัก) ---
+        st.divider()
+        st.markdown("## 📅 คำแนะนำตารางการแบ่งใส่ BioSoil และ BioMax ตลอดปี (3 รอบหลัก)")
+        st.caption("การแบ่งใส่เป็นรอบ ช่วยให้ดินอุ้มปุ๋ยได้ดีและพืชดูดซึมธาตุอาหารได้ต่อเนื่องที่สุด")
+
+        # สร้างตารางการใส่ปุ๋ยประจำปี
+        st.markdown(f"""
+        | รอบที่ / ระยะพืช | BioSoil (ไบโอซอย) | BioMax (ไบโอแม็ก)[cite: 1] | วัตถุประสงค์หลัก |
+        | :--- | :--- | :--- | :--- |
+        | **รอบที่ 1:** ฟื้นฟูต้น / ทำใบอ่อน (หลังเก็บเกี่ยว) | **{biosoil_per_round} กก./ต้น** | 1 ลิตร : น้ำ 1,000 ลิตร (ราดโคน) | ฟื้นฟูดินกระด้าง เติมอินทรียวัตถุ เร่งรากใหม่[cite: 2, 3] |
+        | **รอบที่ 2:** สะสมอาหารทำดอก (ก่อนบาน 1-2 เดือน) | **{round(biosoil_per_round * 0.7, 1)} กก./ต้น** | 1 ลิตร : น้ำ 1,000 ลิตร (ราดโคน) | ปรับสมดุล pH กระตุ้นการตาดอก[cite: 2, 3] |
+        | **รอบที่ 3:** ขยายขนาดผล (ติดผล 30-70 วัน) | **{biosoil_per_round} กก./ต้น** | 1 ลิตร : น้ำ 1,000 ลิตร (ราดโคน) | ช่วยอุ้มปุ๋ยเคมี ขยายขนาดผล เพิ่มความหวาน[cite: 2, 3] |
+        """)
+
+    # สรุปยอดแม่ปุ๋ยเคมีที่ต้องใช้ทั้งสวนในรอบนี้
+    st.divider()
+    st.markdown("### 📦 สรุปยอดสั่งซื้อแม่ปุ๋ยเคมีรวมทั้งสวน (เฉพาะรอบนี้)")
     st.write(f"- **46-0-0 รวม:** {res['total_farm_chemical_kg']['urea_46_0_0_kg']} กิโลกรัม")
     st.write(f"- **18-46-0 รวม:** {res['total_farm_chemical_kg']['dap_18_46_0_kg']} กิโลกรัม")
     st.write(f"- **0-0-60 รวม:** {res['total_farm_chemical_kg']['mop_0_0_60_kg']} กิโลกรัม")

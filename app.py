@@ -107,6 +107,6 @@ if st.button("🧮 คำนวณสูตรปุ๋ยอัจฉริย�
         st.markdown("### 📲 สนใจสั่งซื้อ หรือปรึกษาหมอดินเพิ่มเติม")
         c_btn1, c_btn2 = st.columns(2)
         with c_btn1:
-            st.link_button("💬 สั่งซื้อผ่าน LINE Official", "https://line.me", use_container_width=True, type="primary")
+            st.link_button("💬 สั่งซื้อผ่าน LINE Official", "https://lin.ee/ZyddN1x", use_container_width=True, type="primary")    
         with c_btn2:
-            st.link_button("📞 โทรปรึกษาผู้เชี่ยวชาญ", "tel:0800000000", use_container_width=True)
+            st.link_button("📞 โทรปรึกษาผู้เชี่ยวชาญ", "tel:0626323246", use_container_width=True)

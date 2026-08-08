@@ -3,7 +3,7 @@ def calculate_durian_fertilizer_api(
     tree_count: int,
     stage: str,
     soil_ph: float,
-    soil_n_ppm: float,  # เปลี่ยนจาก OM% เป็น N (ppm)
+    soil_n_ppm: float,
     soil_p_ppm: float,
     soil_k_ppm: float,
     use_bio_duo: bool = True
@@ -25,8 +25,7 @@ def calculate_durian_fertilizer_api(
     base_p = stage_data["P"] * size_factor
     base_k = stage_data["K"] * size_factor
     
-    # ตัวคูณปรับแก้ตามค่า N (ppm) ที่อ่านได้จากเครื่องวัดดิน
-    # N < 20 ppm (ต่ำ), 20-50 ppm (ปานกลาง), > 50 ppm (สูง)
+    # ตัวคูณปรับแก้ตามค่า N (ppm)
     f_n = 1.2 if soil_n_ppm < 20 else (0.8 if soil_n_ppm > 50 else 1.0)
     f_p = 1.2 if soil_p_ppm < 15 else (0.5 if soil_p_ppm > 45 else 1.0)
     f_k = 1.2 if soil_k_ppm < 60 else (0.75 if soil_k_ppm > 120 else 1.0)
@@ -49,7 +48,7 @@ def calculate_durian_fertilizer_api(
     remaining_n = max(0.0, target_n - n_from_dap)
     urea_g = (remaining_n / 46.0) * 100.0
 
-    # 2. คำนวณทางเลือกปุ๋ยสูตรสำเร็จตามระยะพืช (สำหรับเกษตรกรที่ไม่ผสมปุ๋ยเอง)
+    # 2. คำนวณทางเลือกปุ๋ยสูตรสำเร็จ
     commercial_recommendation = ""
     commercial_kg_per_tree = 0.0
     
@@ -63,7 +62,7 @@ def calculate_durian_fertilizer_api(
         commercial_recommendation = "สูตร 15-5-20 หรือ 15-15-15 (เน้นขยายผล)"
         commercial_kg_per_tree = round((target_k / 20.0) * 100 / 1000.0, 2)
     else:
-        commercial_recommendation = "สูตร 0-0-60 หรือ 13-13-21 (เน้นสร้างน้ำตาล/ทำหวาน)"
+        commercial_recommendation = "สูตร 0-0-60 หรือ 13-13-21 (เน้นทำหวาน)"
         commercial_kg_per_tree = round((target_k / 21.0) * 100 / 1000.0, 2)
 
     soil_alert = "สภาพดินปกติ"
